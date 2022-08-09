@@ -1,0 +1,214 @@
+				+-~-~-~-~-~-~-~-~-~-~-+
+				|==>Java Exceptions<==|
+				+~-~-~-~-~-~-~-~-~-~-~+
+
+A stacktrace is a message that, when encountered unexpectedly, is caused by a RuntimeException.
+
++-------------------------------------------------------------------+
+|Exception in thread "main" java.lang.ArithmeticException: / by zero|
+|    at Main.main(Main.java:4)							   |
++-------------------------------------------------------------------+
+
+A common misconception is that an Exception is simply an error or problem with your program.
+
+An Exception is simply a type of Java object meant to “wrap” an event that causes an interruption to the typical flow of a program.
+
+This means that somewhere in the code, after a specific set of circumstances occur (the circumstances depend on the kind of Exception), Java creates an Exception object. This object “wraps” the event that just occurred by saving essential information about the program’s state at that moment in its runtime. So, for instance, an Exception object will have information about the series of methods invoked that left the program in its current state.
+
+The new Exception type object is thrown and interrupts the program’s flow. As developers, we may choose to account for this interruption by handling the Exception, or we may allow for the interruption to halt the flow of the program.
+
+	EXAMPLE:
+
++-------------------------------------------------------------------+
+|public class Main {									   |
+|  public static void main(String[] args) {					   |
+|    int result = 1/0;									   |
+|    System.out.println(result);							   |
+|  }													   |
+|}													   |
++-------------------------------------------------------------------+
+
+Notice that we perform a division operation with 0 in the denominator in the main method. If we recall the rules of mathematics, the division is not defined for when there is 0 in the denominator. This is an a-typical event and should not proceed forward as other division operations would.
+
+Therefore, the given instruction generates a new ArthmeticException object. This operation throws the new object, and as we have no code specifically handling the Exception, it is passed to the JVM.
+
+When the JVM is made responsible for handling an exception (because we don’t do so explicitly- more on this later), the default behavior is for the program to halt and form a stack trace to print.
+
+The code above would result in the following message to the console:
+
++-------------------------------------------------------------------+
+|Exception in thread "main" java.lang.ArithmeticException: / by zero|
+|    at Main.main(Main.java:4)							   |
++-------------------------------------------------------------------+
+
+As mentioned, this is the stacktrace of the program.
+
+	STACKTRACE:
+
+A stacktrace is the series of method invocations that lead to a particular point in a program’s execution. In our earlier example, we can see that the line of code to cause the program’s interruption was in the HelloWorld class in the main method. We are even indicated line number: 4.
+
+Let’s explore the concept further by using a more complex example. Take the following code:
+
++-------------------------------------------------------------------+
+|public class Main {									   |
+|  public static void main(String[] args) {					   |
+|    methodA();										   |
+|  }													   |
+|													   |
+|  private static void methodA() {							   |
+|    methodB();										   |
+|  }													   |
+|													   |
+|  private static void methodB() {							   |
+|    int result = 1/0;									   |
+|    System.out.println(result);							   |
+|  }													   |
+|}													   |
++-------------------------------------------------------------------+
+
+Notice that when we run our program, the main method will run methodA, which will run methodB.
+
+Anytime we invoke a method, that creates a new entry on our execution stack (the portion of memory responsible for tracking our instructions and accessible variables).
+
+The previous code results in the following stacktrace upon execution.
+
++-------------------------------------------------------------------+
+|Exception in thread "main" java.lang.ArithmeticException: / by zero|
+|  at Main.methodB(Main.java:12)							   |
+|  at Main.methodA(Main.java:8)							   |
+|  at Main.main(Main.java:4)								   |
++-------------------------------------------------------------------+
+
+By examining the stacktrace we can glean the programs flow and its interrupting circumstances.
+
+	glean - verb - extract (information) from various sources.
+
+The first line of the stacktrace always indicates the specific type of Exception and often any additional informative message. In the example, you’ll see the message “/ by zero” and that it was an ArithmeticException.  
+
+The method invocations that caused our Exception to follow this first line. The lines begin at NameOfClass.nameOfMethod. The first of these lines indicates the most recent method call. Here it was methodB. If we read down the stacktrace, it’s given that methodB was invoked by methodA, and finally, that methodA was invoked by main.
+
+This information is beneficial for tracing back any problem or root causes. Often data is passed from one method to another and may prove that the cause of an Exception is not actually the most recent method invocation and instead is an action earlier in the program.
+
+Now, there may be something about this example that is causing you a bit of confusion. Notice that at points I have said the above Exception was an Exception, a RuntimeException, and an ArithmeticException. You may be wondering, so what is it?
+
+	Exception Hierarchy
+
+		    +---------+
+		    |Throwable|
+		    +---------+
+			    ^
+			    |
+ 		    ----- --------
+		   |			   |
+	    +-----+        +---------+
+	    |Error|	    |Exception|
+	    +-----+	    +---------+
+					    ^
+					    |
+	     -------------- -------------- --------------
+	    |		    |		    |              |
+    +-----------+  +----------+   +---------+    +---------+
+    |IOException|  |ClassNot  |   |CloneNot |    |Runtime  |
+    +-----------+  |Found     |   |Supported|    |Exception|  			^	    |Exception |   |Exception|    +---------+
+		|	    +----------+   +---------+	    ^
+ ---------								    |
+|								     ---------
+|    +------------+					    |
+ ----|EOFException|					    |    +----------+
+|    +------------+					     ----|Arithmetic|
+|								    |    |Exception |
+|								    |    +----------+
+|    +------------+					    |
+ ----|FileNotFound|					    |    +---------+
+|    |Exception   |					     ----|ClassCast|
+|    +------------+					    |    |Exception|
+|								    |    +---------+
+|								    |
+|    +------------+					    |
+ ----|MalformedURL|					    |    +---------+
+|    |Exception   |					    |    |Illegal  |
+|    +------------+					     ----|Argument |
+|								    |    |Exception|
+|								    |    +---------+
+|    +------------+					    |
+ ----|UnknownHost |					    |    +---------+
+     |Exception   |					    |    |Illegal  |
+     +------------+					     ----|State    |
+								    |    |Exception|
+								    |    +---------+
+								    |
+								    |    +---------+
+								    |    |IndexOut |
+									----|OfBounds |
+								    |    |Exception|
+								    |    +---------+
+								    |
+								    |    +---------+
+								    |    |NoSuch   |
+									----|Element  |
+								    |    |Exception|
+								    |    +---------+
+								    |
+								    |    +---------+
+								    |    |Null     |
+									----|Pointer  |
+									    |Exception|
+									    +---------+
+
+The exception class hierarchy starts with the Throwable class, which inherits from Object. Any Throwable object can be "thrown" in a program by the JVM or the programmer using the throws keyword. The Exception and Error classes both extend Throwable. An Error represents something that went so horribly wrong with your application that you should not attempt to recover from. An error and an exception are not the same. Exceptions are disruptions in the flow of the program, and we want to recover from them. Some examples of errors are:
+
+	*ExceptionInInitializerError
+	*OutOfMemoryError
+	*StackOverflowError
+
+An Exception is a general exception class that provides an abstraction for all exceptions. There are many subclasses of Exception, as shown above. So, our Arithmetic Exception is indeed an Exception as it inherits indirectly from the Exception class.
+
+	Unchecked vs. Checked Exceptions
+
+The Exception class and all of its subclasses, except for RuntimeException, are known as "checked exceptions".
+
+These represent occasions where it is reasonable to anticipate an unexpected condition, like a file not existing when attempting to write to it (which would result in a FileNotFoundException).
+
+Checked exceptions must be handled or declared by the programmer - otherwise, the code will not compile.
+
+FileNotFoundException (I/O Exception) - signals that an attempt to open the file denoted by a specified pathname has failed
+ClassNotFoundException- when the JVM tries to load a particular class but does not find it in the classpath.
+
+RuntimeException is a special type of exception - it and all its subclasses - are known as "unchecked exceptions".
+
+An unchecked exception is an exception that is not required to be handled or declared like checked exceptions are. Some examples include:
+
+ArithmeticException for illegal math operations (as we saw in our example)
+IndexOutOfBoundsException for if you reference an index that is greater than the length of an array
+NullPointerException for if you attempt to perform an operation on a reference variable that points to a null value.
+
+
+	Handling / Declaring Exceptions
+
+When risky code is written that has the possibility of throwing an exception; it can be dealt with in one of two ways:
+
+Handling means that the risky code is placed inside a try/catch block
+Declaring means that the type of exception to be thrown is listed in the method signature with the throws keyword. This is also called "ducking" the exception - you let the code which calls the method deal with it.
+
+Developers can also force exceptions and handle them ahead of time if we are aware they will happen or that a piece of code written is meant to throw an exception. To do this, we use two keywords one is called throw and the other is throws. There are distinct differences between these two keywords.
+
+The throws keyword is used if we know that a method will throw an exception. We put throws in the method signature to signify that our method may throw an exception but doesn’t have to.
+
+The throw keyword is used when we want a method to always throw an exception.
+
+
+	try/catch/finally Blocks
+
+To handle exceptions that could be thrown in our application, a try/catch block can be used. Using a try/catch block allows the program to continue running after an exception is caught.
+
+The try block encloses the code that may throw an exception and the catch block defines an exception to catch and then runs the code inside only if that type of exception is thrown. The catch block will save the thrown exception in the variable declared in its parentheses, and this variable may be used throughout the catch block- similar to how we have a parameter in a method.
+
+	try/catch/finally Block Rules
+
+Catch, and finally, blocks have several different rules which must be followed:
+
+1)Multiple catch blocks are allowed. However, more specific 	exceptions must come before more general exception types.
+2) Multi-catch blocks (catching more than one exception in a given 	block) are allowed, exception types are separated by ||
+3) The finally block is optional.
+4) A try/finally block only IS allowed, but a try block by itself is 	not
+5) A finally block will always execute unless of course, 	System.exit() is called
